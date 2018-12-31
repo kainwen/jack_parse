@@ -1,0 +1,28 @@
+#!/usr/bin/env escript
+%%! -pa ./ebin
+
+-mode(compile).
+
+main([SourceFile]) ->
+    case filelib:is_dir(SourceFile) of
+        true ->
+            handle_fiels(SourceFile);
+        false ->
+            handle_single_file(SourceFile)
+    end.
+    
+handle_single_file(SourceFile) ->
+    Dir = filename:dirname(SourceFile),
+    BaseName = filename:basename(filename:basename(SourceFile),
+                                 ".jack"),
+    TokOutFile = string:join([BaseName, "T", ".xml"], ""),
+    ParseOutFile = string:join([BaseName, ".xml"], ""),
+    jack_parse:scan_and_parse(SourceFile,
+                              filename:join(Dir, TokOutFile),
+                              filename:join(Dir, ParseOutFile)).
+
+handle_fiels(Dirname) ->
+    {ok, AllFiles} = file:list_dir(Dirname),
+    JackFiles = [filename:join(Dirname, Fn)
+               || Fn <- AllFiles, filename:extension(Fn) =:= ".jack"],
+    lists:foreach(fun handle_single_file/1, JackFiles).
